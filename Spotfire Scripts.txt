@@ -1,0 +1,15 @@
+##TransCount		
+DenseRank([H_transaction_date], "asc", "ties.method=minimum", [H_customer_id])
+
+##TransAge
+Days(DateTimeNow() - [H_transaction_date])
+
+##InterPurchaseTime
+Avg([TransAge]) OVER (Intersect(Previous([TransCount]),[H_customer_id])) - Avg([TransAge]) OVER ([H_transaction_id]) 
+
+##RecencyState ($TNF_Transactions.TimeBin) is a dynamic input DEFAULT - 365
+If([InterPurchaseTime] < (${TNF_Transactions}.{TimeBin}), 1,  
+If([InterPurchaseTime]< (${TNF_Transactions}.{TimeBin})*2, 2, 
+If([InterPurchaseTime] < (${TNF_Transactions}.{TimeBin})*3, 3, 
+If([InterPurchaseTime] < ( ${TNF_Transactions}.{TimeBin})*4, 4, 
+If([TransAge] < ${TNF_Transactions}.{TimeBin}, 1, 5)))))
